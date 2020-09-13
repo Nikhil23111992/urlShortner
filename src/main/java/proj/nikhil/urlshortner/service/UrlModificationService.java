@@ -22,6 +22,8 @@ import proj.nikhil.urlshortner.utility.Base62Utility;
 public class UrlModificationService
 {
 
+    private static final String regex = "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
+
     private static final Logger logger = LoggerFactory.getLogger(UrlModificationService.class);
 
     @Autowired
@@ -32,7 +34,7 @@ public class UrlModificationService
 
     @Autowired
     Base62Utility base62Utility;
-    
+
     @Value("${urlshortner.shortcode}")
     private String urlname;
 
@@ -44,10 +46,10 @@ public class UrlModificationService
         logger.info(methodName + "Entry : " + urlRequest);
         UrlResponse urlResponse = new UrlResponse();
 
-        if (null == urlRequest.getUrl() || urlRequest.getUrl().isEmpty())
+        if (null == urlRequest.getUrl() || urlRequest.getUrl().isEmpty() || !urlRequest.getUrl().matches(regex))
         {
 
-            setErrorMessage(urlResponse, "Input Url missing");
+            setErrorMessage(urlResponse, "Input Url missing or Improper");
         }
         else
         {
@@ -93,29 +95,34 @@ public class UrlModificationService
 
         String methodName = "getShortUrl-service";
         logger.info(methodName + "Entry : " + shortUrl);
+
         UrlResponse urlResponse = new UrlResponse();
-        String tempSplit[] = shortUrl.split("url/");
-        UrlData urlData = null;
-        if (tempSplit.length > 0)
+        if (null == shortUrl || shortUrl.isEmpty())
         {
-            urlData = urlcurdRepo.getFindByShortUrl(tempSplit[1]);
-        }
-        if (urlData != null)
-        {
-            urlResponse.setShortUrl(urlname+ tempSplit[1]);
-            urlResponse.setUrl(urlData.getUrl());
+
+            setErrorMessage(urlResponse, "Input shortUrl missing or Improper");
         }
         else
         {
-            Error error = new Error();
-            error.setErrorcode("1");
-            error.setErrorDescription("No matching short Found");
-            List<Error> errosList = new ArrayList<>();
-            errosList.add(error);
-            urlResponse.setErrors(errosList);
 
+            String tempSplit[] = shortUrl.split("url/");
+            UrlData urlData = null;
+            if (tempSplit.length > 0)
+            {
+                urlData = urlcurdRepo.getFindByShortUrl(tempSplit[1]);
+            }
+            if (urlData != null)
+            {
+                urlResponse.setShortUrl(urlname + tempSplit[1]);
+                urlResponse.setUrl(urlData.getUrl());
+            }
+            else
+            {
+
+                setErrorMessage(urlResponse, "No matching short Found");
+
+            }
         }
-
         logger.info(methodName + "Exit : " + urlResponse);
         return urlResponse;
     }
