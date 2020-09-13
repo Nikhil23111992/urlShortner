@@ -30,4 +30,5 @@ Things take care while implementation.
 3. Ui can call the endpoints for creating a new shorturl or redirect shorturl after getting exact matach from the service.
 
 
+Application flow diagram is added in applicationDiagram.jpeg
 
